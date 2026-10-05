@@ -273,6 +273,54 @@ print("Saved: ~/my-logo.png")
 PYTHON
 ```
 
+
+```bash
+sudo bash << 'EOF'
+# Generate solid-background logo with matching colors
+python3 << 'PYTHON'
+from PIL import Image, ImageDraw, ImageFont
+import os
+
+text = "JANAK"
+font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+bg = (13, 11, 12, 255)      # dark #0c0b0c (matches your Limine theme)
+fg = (192, 202, 245, 255)   # light #c0caf5
+
+font_size = 400
+font = ImageFont.truetype(font_path, font_size)
+
+tmp_img = Image.new("RGBA", (10, 10))
+tmp_draw = ImageDraw.Draw(tmp_img)
+bbox = tmp_draw.textbbox((0, 0), text, font=font)
+w = bbox[2] - bbox[0]
+h = bbox[3] - bbox[1]
+
+pad = int(font_size * 0.3)
+canvas = Image.new("RGBA", (w + pad * 2, h + pad * 2), bg)
+draw = ImageDraw.Draw(canvas)
+draw.text((pad - bbox[0], pad - bbox[1]), text, font=font, fill=fg)
+
+path = os.path.expanduser("~/janak-solid.png")
+canvas.save(path)
+print(f"Saved: {path}")
+PYTHON
+
+# Apply it to Plymouth
+omarchy plymouth set '#0c0b0c' '#c0caf5' ~/janak-solid.png
+
+# Update Limine bootloader menu text
+sed -i 's/interface_branding: Omarchy Bootloader/interface_branding: JANAK Bootloader/' /boot/limine.conf
+
+# Update system name in fastfetch
+sed -i 's/^NAME="Omarchy"/NAME="JANAK"/' /etc/os-release
+
+echo "=== Done. All three places updated ==="
+echo "Reboot to see the changes take effect:"
+echo "  reboot"
+EOF
+```
+
+
 Two Arch-specific gotchas: plain `pip install pillow` hits an "externally
 managed environment" error — use `pacman` instead. And DejaVu's font path
 on Arch (`/usr/share/fonts/TTF/...`) is not the same as on Debian/Ubuntu
